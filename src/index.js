@@ -21,7 +21,14 @@ function checksExistsUserAccount(request, response, next) {
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const {user} = request;
+  if ((user.todos.length > 10)&&(user.pro === false)) {
+    return response.status(401).json({
+      error: "User has already reach the maximun of todos, please update to the Pro Version"
+    });
+  }
+  request.user = user;
+  return next();
 }
 
 function checksTodoExists(request, response, next) {
