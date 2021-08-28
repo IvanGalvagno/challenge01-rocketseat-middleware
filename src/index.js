@@ -14,7 +14,7 @@ function checksExistsUserAccount(request, response, next) {
   const user = users.find((user)=> user.username === username);
 
   if (!user)
-    return response.status(400).json({error: "User doesnt exists"});
+    return response.status(404).json({error: "User doesnt exists"});
 
   request.user = user;
   return next();
@@ -22,8 +22,9 @@ function checksExistsUserAccount(request, response, next) {
 
 function checksCreateTodosUserAvailability(request, response, next) {
   const {user} = request;
-  if ((user.todos.length > 10)&&(user.pro === false)) {
-    return response.status(401).json({
+
+  if ((user.todos.length >= 10)&&(!user.pro)) {
+    return response.status(403).json({
       error: "User has already reach the maximun of todos, please update to the Pro Version"
     });
   }
@@ -32,11 +33,38 @@ function checksCreateTodosUserAvailability(request, response, next) {
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const {username} = request.headers;
+  const {id} = request.params;
+  
+  const isValidUUID = validate(id);
+  if (!isValidUUID) 
+    return response.status(400).json({error: "Invalid ID"})
+
+
+  const user = users.find((user) => user.username === username);
+  if (!user)
+    return response.status(404).json({error: "user not found"});
+
+
+  const todo = users.findIndex((todo) => todo.id === id);
+  if (todo.id === -1)
+    return response.status(204).json({error: "TODO not founded!"});
+
+  request.user = user;
+  request.todo = todo;
+  next();
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const {id} = request.params;
+
+  const user = users.findIndex((user)=> user.id === id);
+
+  if (user.id === -1)
+    return response.status(404).json({error: "User not found"});
+  
+  request.user = user;
+  next();
 }
 
 app.post('/users', (request, response) => {
